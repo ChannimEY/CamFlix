@@ -1,132 +1,87 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  ScrollView,
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Modal,SafeAreaView,} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-export default function SettingScreen() {
+export default function LogoutModalExample() {
+  const [visible, setVisible] = useState(true);
+
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <View style={styles.profileRow}>
-          <Image
-          source={require('@/assets/images/mimi.jpg')}
-          style={styles.avatar}
-        />
-          <View style={{ flex: 1, marginLeft: 15 }}>
-            <Text style={styles.name}>Example</Text>
-            <Text style={styles.email}>example@gmail.com</Text>
+      <Modal transparent visible={visible} animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            
+            <View style={styles.iconCircle}>
+              <Ionicons name="help" size={40} color="#fff" />
+            </View>
+
+            <Text style={styles.title}>Are you sure?</Text>
+            <Text style={styles.description}>
+              Logout!? Why you to logout ? that our cinema not interested!
+            </Text>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.logoutButton]}
+                onPress={() => console.log("Logged out")}
+              >
+                <Text style={styles.logoutText}>Log Out</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setVisible(false)}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <Ionicons name="create-outline" size={22} color="#fff" />
         </View>
-        
-        <View style={styles.premiumBanner}>
-          <Text style={styles.premiumTitle}>Premium Member</Text>
-          <Text style={styles.premiumText}>
-            New movies are coming for you, Download Now!
-          </Text>
-        </View>
-
-      
-        <Text style={styles.sectionTitle}>Account</Text>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Member</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Change Password</Text>
-        </TouchableOpacity>
-
-        
-        <Text style={styles.sectionTitle}>General</Text>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Notification</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Language</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Country</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Clear Cache</Text>
-        </TouchableOpacity>
-
-      
-        <Text style={styles.sectionTitle}>More</Text>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Legal and Policies</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>Help & Feedback</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>About Us</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      
+      </Modal>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#121212" },
-  header: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "bold",
-    margin: 20,
-  },
-  profileRow: {
-    flexDirection: "row",
+  container: { flex: 1, backgroundColor: "#000" },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 20,
   },
-  avatar: { width: 80, height: 80, borderRadius: 40 },
-  name: { color: "#fff", fontSize: 18, fontWeight: "600" },
-  email: { color: "#aaa", fontSize: 14 },
-  premiumBanner: {
-    backgroundColor: "#ff8800",
-    borderRadius: 8,
+  modalBox: {
+    backgroundColor: "#1c1c1c",
+    width: "85%",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+  },
+  iconCircle: {
+    backgroundColor: "orange",
+    borderRadius: 50,
     padding: 15,
-    marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 15,
   },
-  premiumTitle: { color: "#fff", fontWeight: "bold", marginBottom: 5 },
-  premiumText: { color: "#fff", fontSize: 14 },
-  sectionTitle: {
-    color: "#aaa",
+  title: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 10 },
+  description: {
     fontSize: 14,
-    marginTop: 20,
-    marginHorizontal: 20,
-    marginBottom: 10,
+    color: "#ccc",
+    textAlign: "center",
+    marginBottom: 20,
   },
-  item: {
-    backgroundColor: "#1e1e1e",
-    padding: 15,
-    marginHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  itemText: { color: "#fff", fontSize: 16 },
-  logoutButton: {
-    backgroundColor: "#00d4aa",
-    paddingVertical: 15,
+  buttonRow: { flexDirection: "row", justifyContent: "space-between", width: "100%" },
+  button: {
+    flex: 1,
+    padding: 12,
     borderRadius: 8,
     alignItems: "center",
-    marginHorizontal: 20,
-    marginTop: 30,
+    marginHorizontal: 5,
   },
-  logoutText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  
+  logoutButton: { backgroundColor: "red" },
+  cancelButton: { backgroundColor: "#ee1a1a" },
+  logoutText: { color: "#f8f1f1", fontWeight: "bold" },
+  cancelText: { color: "#fff", fontWeight: "bold" },
 });

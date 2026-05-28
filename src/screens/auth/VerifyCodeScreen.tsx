@@ -5,6 +5,8 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
+  
 } from "react-native";
 
 export default function VerifyCodeScreen() {
@@ -17,6 +19,7 @@ export default function VerifyCodeScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
     
       <Text style={styles.title}>Verifying Your Account</Text>
@@ -42,6 +45,7 @@ export default function VerifyCodeScreen() {
         <Text style={styles.resend}>Didn’t receive code? Resend.</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -80,7 +84,7 @@ const styles = StyleSheet.create({
     height: 50,
   },
   continueButton: {
-    backgroundColor: "#00d4aa",
+    backgroundColor: "#d40000",
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",
@@ -92,7 +96,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   resend: {
-    color: "#00aaff",
+    color: "#20c6f0",
     fontSize: 14,
     textAlign: "center",
   },

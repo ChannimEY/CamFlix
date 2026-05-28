@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -15,6 +16,7 @@ export default function NewPasswordScreen() {
   const [secureConfirm, setSecureConfirm] = useState(true);
 
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
       <Text style={styles.subtitle}>Enter your new password</Text>
 
@@ -56,6 +58,7 @@ export default function NewPasswordScreen() {
         <Text style={styles.resetText}>Reset</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   resetButton: {
-    backgroundColor: "#00d4aa",
+    backgroundColor: "#fc1818",
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",

@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -12,6 +13,7 @@ export default function ResetPasswordScreen() {
   const [email, setEmail] = useState("example@gmail.com");
 
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
 
       <Text style={styles.subtitle}>Recover your account password</Text>
@@ -27,6 +29,7 @@ export default function ResetPasswordScreen() {
         <Text style={styles.nextText}>Next</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -60,7 +63,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   nextButton: {
-    backgroundColor: "#00d4aa",
+    backgroundColor: "#d40000",
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",

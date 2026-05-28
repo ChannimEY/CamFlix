@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-
+  SafeAreaView,
 } from "react-native";
 
 const RegisterScreen = () => {
@@ -20,6 +20,7 @@ const RegisterScreen = () => {
   };
 
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
       <Text style={styles.header}>Let’s get started</Text>
       <Text style={styles.subtext}>The latest movies and series are here</Text>
@@ -67,6 +68,7 @@ const RegisterScreen = () => {
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 };
 
@@ -126,7 +128,7 @@ Text:{
     textDecorationLine: "underline",
   },
   button: {
-    backgroundColor: "#00bcd4",
+    backgroundColor: "#d40000",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",

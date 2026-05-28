@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const [secure, setSecure] = useState(true);
 
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
       
       <Text style={styles.greeting}>Hi, All User</Text>
@@ -56,6 +58,7 @@ export default function LoginScreen() {
         <Text style={styles.loginText}>Login</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   loginButton: {
-    backgroundColor: "#00d4aa",
+    backgroundColor: "#d40000",
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",
