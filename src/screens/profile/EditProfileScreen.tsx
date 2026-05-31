@@ -13,8 +13,10 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile, unwrapUser } from "../../api/services/authService";
+import { useNavigation } from "@react-navigation/native";
 
-export default function EditProfileScreen({ navigation }: { navigation?: any }) {
+export default function EditProfileScreen() {
+  const navigation = useNavigation();
   const { user, token, refreshUser } = useAuth();
   const [firstName, setFirstName] = useState(user?.first_name || user?.name?.split(" ")[0] || "");
   const [lastName, setLastName] = useState(user?.last_name || user?.name?.split(" ")[1] || "");
@@ -58,7 +60,7 @@ export default function EditProfileScreen({ navigation }: { navigation?: any }) 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
 

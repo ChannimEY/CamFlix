@@ -11,10 +11,12 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
-export default function LoginScreen({ navigation }: { navigation?: any }) {
+export default function LoginScreen() {
+  const navigation = useNavigation();
   const { login } = useAuth();
-  const [email, setEmail] = useState("example@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function LoginScreen({ navigation }: { navigation?: any }) {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigation?.replace("Tab");
+      (navigation as any).replace("Tab");
     } catch (error) {
       Alert.alert("Error", "Invalid credentials");
     }
@@ -77,6 +79,13 @@ export default function LoginScreen({ navigation }: { navigation?: any }) {
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
           {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginText}>Login</Text>}
         </TouchableOpacity>
+        
+        <View style={styles.registerLinkContainer}>
+          <Text style={styles.registerText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => (navigation as any).navigate("Register")}>
+            <Text style={styles.registerLink}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -144,6 +153,20 @@ const styles = StyleSheet.create({
   loginText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  registerLinkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  registerText: {
+    color: "#aaa",
+    fontSize: 14,
+  },
+  registerLink: {
+    color: "#F2242A",
+    fontSize: 14,
     fontWeight: "bold",
   },
 });

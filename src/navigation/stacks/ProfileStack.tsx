@@ -4,8 +4,14 @@ import EditProfileScreen from "../../screens/profile/EditProfileScreen";
 
 const ProfileStack = createNativeStackNavigator({
   screens: {
-    Profile: ProfileScreen,
-    EditProfile: EditProfileScreen,
+    Profile: {
+      screen: ProfileScreen,
+      options: { headerShown: false },
+    },
+    EditProfile: {
+      screen: EditProfileScreen,
+      options: { headerShown: false },
+    },
   },
 });
 

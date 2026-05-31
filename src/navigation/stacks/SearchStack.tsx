@@ -5,8 +5,13 @@ import MovieDetailScreen from "../../screens/home/MovieDetailScreen";
 
 const SearchStack = createNativeStackNavigator({
   screens: {
-    Search: SearchScreen,
-    Detail: MovieDetailScreen,
+    Search: {
+      screen: SearchScreen,
+      options: { headerShown: false },
+    },
+    Detail: {
+      screen: MovieDetailScreen,
+    },
   },
 });
 

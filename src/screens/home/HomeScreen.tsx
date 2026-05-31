@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,7 +9,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useEffect, useState } from "react";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -20,6 +20,7 @@ import {
   Movie,
 } from "../../api/services/movieService";
 import MoviePosterCard from "../../components/MoviePosterCard";
+import { useNavigation } from "@react-navigation/native";
 
 type MovieCategory = "nowPlaying" | "upcoming" | "topRated" | "popular";
 
@@ -37,7 +38,8 @@ const movieFetchers: Record<MovieCategory, () => Promise<Movie[]>> = {
   popular: getPopularMovies,
 };
 
-const HomeScreen = ({ navigation }: { navigation?: any }) => {
+const HomeScreen = () => {
+  const navigation = useNavigation();
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [activeCategory, setActiveCategory] =
@@ -46,7 +48,7 @@ const HomeScreen = ({ navigation }: { navigation?: any }) => {
   const [error, setError] = useState("");
 
   const handleMoviePress = (movieId: number) => {
-    navigation?.navigate("Detail", { movieId });
+    (navigation as any).navigate("Detail", { movieId });
   };
 
   const fetchMoviesByCategory = async (category: MovieCategory) => {

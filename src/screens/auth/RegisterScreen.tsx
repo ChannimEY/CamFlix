@@ -10,8 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
-const RegisterScreen = ({ navigation }: { navigation?: any }) => {
+const RegisterScreen = () => {
+  const navigation = useNavigation();
   const { register } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -38,7 +40,7 @@ const RegisterScreen = ({ navigation }: { navigation?: any }) => {
         password,
         password_confirmation: confirmPassword,
       });
-      navigation?.replace("Tab");
+      (navigation as any).replace("Tab");
     } catch (error) {
       Alert.alert("Error", "Registration failed");
     }
@@ -101,6 +103,13 @@ const RegisterScreen = ({ navigation }: { navigation?: any }) => {
             <Text style={styles.buttonText}>Sign Up</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.loginLinkContainer}>
+          <Text style={styles.loginText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => (navigation as any).navigate("Login")}>
+            <Text style={styles.loginLink}>Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -168,6 +177,20 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  loginLinkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  loginText: {
+    color: "#aaa",
+    fontSize: 14,
+  },
+  loginLink: {
+    color: "#F2242A",
+    fontSize: 14,
     fontWeight: "bold",
   },
 });

@@ -24,8 +24,14 @@ const AuthStack = createNativeStackNavigator({
       screen: ForgotPasswordScreen,
       options: { headerShown: false },
     },
-    NewPassword: NewPasswordScreen,
-    VerifyCode: VerifyCodeScreen,
+    NewPassword: {
+      screen: NewPasswordScreen,
+      options: { headerShown: false },
+    },
+    VerifyCode: {
+      screen: VerifyCodeScreen,
+      options: { headerShown: false },
+    },
   },
 });
 

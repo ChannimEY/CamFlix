@@ -5,8 +5,15 @@ import MovieDetailScreen from "../../screens/home/MovieDetailScreen";
 
 const HomeStack = createNativeStackNavigator({
   screens: {
-    Home: HomeScreen,
-    Detail: MovieDetailScreen,
+    Home: {
+      screen: HomeScreen,
+      options: { headerShown: false },
+    },
+    Detail: {
+      screen: MovieDetailScreen,
+        options: { headerShown: false },
+      
+    },
   },
 });
 

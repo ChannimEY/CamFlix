@@ -9,8 +9,11 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 
-const WelcomeScreen = ({ navigation }: { navigation?: any }) => {
+const WelcomeScreen = () => {
+  const navigation = useNavigation();
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
@@ -29,19 +32,18 @@ const WelcomeScreen = ({ navigation }: { navigation?: any }) => {
 
       <TouchableOpacity
         style={styles.signUpButton}
-        onPress={() => navigation?.navigate("Register")}
+        onPress={() => (navigation as any).navigate("Register")}
       >
         <Text style={styles.signUpText}>Sign Up</Text>
       </TouchableOpacity>
 
       <View style={styles.loginContainer}>
         <Text style={styles.loginText}>
-          Already have an account?
+          Already have an account?{" "}
+          <Text style={styles.loginLink} onPress={() => (navigation as any).navigate("Login")}>
+            Login
+          </Text>
         </Text>
-
-        <TouchableOpacity onPress={() => navigation?.navigate("Login")}>
-          <Text style={styles.loginButton}> Login</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.dividerContainer}>
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
 
-  loginButton: {
+  loginLink: {
     color: "#F2242A",
     fontSize: 17,
     fontWeight: "700",
