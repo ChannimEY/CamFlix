@@ -18,7 +18,7 @@ import {
   getPosterUrl,
   Movie,
   MovieReview,
-} from "../../services/movieService";
+} from "../../api/services/movieService";
 import AboutTab from "./AboutTab";
 import CastTab from "./CastTab";
 import ReviewTab from "./ReviewTab";

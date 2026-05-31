@@ -18,7 +18,7 @@ import {
   getTopRatedMovies,
   getUpcomingMovies,
   Movie,
-} from "../../services/movieService";
+} from "../../api/services/movieService";
 import MoviePosterCard from "../../components/MoviePosterCard";
 
 type MovieCategory = "nowPlaying" | "upcoming" | "topRated" | "popular";

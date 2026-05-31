@@ -1,143 +1,168 @@
 import React from "react";
 import {
-  Alert,
-  Image,
-  StyleSheet,
+  View,
   Text,
   TouchableOpacity,
-  View,
+  StyleSheet,
+  Image,
+  ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/AuthContext";
 
-const ProfileScreen = ({ navigation }: { navigation?: any }) => {
-  const showLogoutPopup = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: () => navigation?.navigate("Logout"),
-      },
-    ]);
+export default function ProfileScreen({ navigation }: { navigation?: any }) {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigation?.replace("Login");
+  };
+
+  const getInitials = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+    }
+    if (user?.name) {
+      return user.name[0].toUpperCase();
+    }
+    return user?.email?.[0]?.toUpperCase() || "?";
+  };
+
+  const getDisplayName = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    if (user?.name) return user.name;
+    return user?.email?.split("@")[0] || "User";
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+          <View style={styles.profileRow}>
+            {user?.profile_photo ? (
+              <Image source={{ uri: user.profile_photo }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <Text style={styles.avatarText}>{getInitials()}</Text>
+              </View>
+            )}
 
-      <View style={styles.profileSection}>
-        <Image
-          source={{ uri: "https://i1-e.pinimg.com/1200x/e6/91/2f/e6912f709474be6a30a0f70cd84bd423.jpg" }}
-          style={styles.profileImage}
-        />
+            <View style={{ flex: 1, marginLeft: 15 }}>
+              <Text style={styles.name}>{getDisplayName()}</Text>
+              <Text style={styles.email}>{user?.email || "example@gmail.com"}</Text>
+            </View>
 
-        <Text style={styles.name}>Channim</Text>
-        <Text style={styles.email}>nim32@gmail.com</Text>
-      </View>
-
-      <View style={styles.menu}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation?.navigate("EditProfile")}
-        >
-          <View style={styles.menuIcon}>
-            <Ionicons name="create-outline" size={22} color="#00D9F5" />
+            <TouchableOpacity onPress={() => navigation?.navigate("EditProfile")}>
+              <Ionicons name="create-outline" size={22} color="#fff" />
+            </TouchableOpacity>
           </View>
 
-          <Text style={styles.menuText}>Edit Profile</Text>
-          <Ionicons name="chevron-forward" size={22} color="#7C7C98" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={showLogoutPopup}>
-          <View style={styles.menuIcon}>
-            <Ionicons name="log-out-outline" size={22} color="#F2242A" />
+          <View style={styles.premiumBanner}>
+            <Text style={styles.premiumTitle}>Premium Member</Text>
+            <Text style={styles.premiumText}>
+              New movies are coming for you, Download Now!
+            </Text>
           </View>
 
-          <Text style={styles.menuText}>Logout</Text>
-          <Ionicons name="chevron-forward" size={22} color="#7C7C98" />
-        </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Member</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Change Password</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.sectionTitle}>General</Text>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Notification</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Language</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Country</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Clear Cache</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.sectionTitle}>More</Text>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Legal and Policies</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>Help & Feedback</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.item}>
+            <Text style={styles.itemText}>About Us</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
-};
-
-export default ProfileScreen;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#13122B",
-    paddingHorizontal: 24,
-  },
-
+  container: { flex: 1, backgroundColor: "#121212" },
   header: {
-    paddingTop: 10,
-    marginBottom: 28,
-  },
-
-  headerTitle: {
     color: "#fff",
-    fontSize: 30,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "bold",
+    margin: 20,
   },
-
-  profileSection: {
-    alignItems: "center",
-    marginBottom: 36,
-  },
-
-  profileImage: {
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    marginBottom: 18,
-  },
-
-  name: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "700",
-  },
-
-  email: {
-    color: "#9C9CB0",
-    fontSize: 16,
-    marginTop: 6,
-  },
-
-  menu: {
-    gap: 14,
-  },
-
-  menuItem: {
-    minHeight: 64,
-    borderRadius: 18,
-    backgroundColor: "#1C1B3A",
-    paddingHorizontal: 16,
+  profileRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
-
-  menuIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: "#242448",
-    alignItems: "center",
+  avatar: { width: 80, height: 80, borderRadius: 40 },
+  avatarPlaceholder: {
+    backgroundColor: "#333",
     justifyContent: "center",
-    marginRight: 14,
+    alignItems: "center",
   },
-
-  menuText: {
-    flex: 1,
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "600",
+  avatarText: { color: "#fff", fontSize: 32, fontWeight: "bold" },
+  name: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  email: { color: "#aaa", fontSize: 14 },
+  premiumBanner: {
+    backgroundColor: "#ff8800",
+    borderRadius: 8,
+    padding: 15,
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
+  premiumTitle: { color: "#fff", fontWeight: "bold", marginBottom: 5 },
+  premiumText: { color: "#fff", fontSize: 14 },
+  sectionTitle: {
+    color: "#aaa",
+    fontSize: 14,
+    marginTop: 20,
+    marginHorizontal: 20,
+    marginBottom: 10,
+  },
+  item: {
+    backgroundColor: "#1e1e1e",
+    padding: 15,
+    marginHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  itemText: { color: "#fff", fontSize: 16 },
+  logoutButton: {
+    backgroundColor: "#d40000",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginTop: 30,
+  },
+  logoutText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });

@@ -1,13 +1,17 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StaticParamList } from "@react-navigation/native";
+import { useAuth } from "../../context/AuthContext";
+import { View, ActivityIndicator } from "react-native";
 
-import HomeStack from "./HomeStack";
+import AuthStack from "./AuthStack";
 import { BottomTab } from "../tabs/BottomTab";
-import ProfileStack from "./ProfileStack";
-import SearchStack from "./SearchStack";
 
-export const RootStack = createNativeStackNavigator({
+const RootStack = createNativeStackNavigator({
   screens: {
+    Auth: {
+      screen: AuthStack,
+      options: { headerShown: false },
+    },
     Tab: {
       screen: BottomTab,
       options: { headerShown: false },
@@ -15,14 +19,13 @@ export const RootStack = createNativeStackNavigator({
   },
 });
 
+export { RootStack };
+
 type RootStackParamList = StaticParamList<typeof RootStack>;
-type HomeStackParamList = StaticParamList<typeof HomeStack>;
-type SearchStackParamList = StaticParamList<typeof SearchStack>;
-type ProfileStackParamList = StaticParamList<typeof ProfileStack>;
+type AuthStackParamList = StaticParamList<typeof AuthStack>;
 
 declare global {
   namespace ReactNavigation {
-    interface RootParamList
-      extends RootStackParamList, HomeStackParamList, SearchStackParamList, ProfileStackParamList {}
+    interface RootParamList extends RootStackParamList, AuthStackParamList {}
   }
 }

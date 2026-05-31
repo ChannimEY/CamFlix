@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { MovieReview } from "../../services/movieService";
+import { MovieReview } from "../../api/services/movieService";
 
 interface ReviewTabProps {
   reviews: MovieReview[];

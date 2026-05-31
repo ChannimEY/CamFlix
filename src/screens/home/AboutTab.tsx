@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Movie } from "../../services/movieService";
+import { Movie } from "../../api/services/movieService";
 
 interface AboutTabProps {
   movie: Movie;

@@ -1,14 +1,12 @@
-import { createStaticNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { RootStack } from './src/navigation/stacks/RootStack';
-
-const Navigation = createStaticNavigation(RootStack);
+import { AuthProvider } from './src/context/AuthContext';
+import AuthGate from './src/navigation/AuthGate';
 
 export default function App() {
   return (
-    <>
-      <Navigation />
+    <AuthProvider>
+      <AuthGate />
       <StatusBar style="auto" />
-    </>
+    </AuthProvider>
   );
 }
