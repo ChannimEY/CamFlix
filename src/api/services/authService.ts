@@ -1,160 +1,244 @@
-import {
-  AuthResponse,
-  ForgotPasswordRequest,
-  LoginRequest,
-  RegisterRequest,
-  ResetPasswordRequest,
-  UpdatePasswordRequest,
-  UpdateProfilePhotoRequest,
-  UpdateProfileRequest,
-  User,
-  VerifyCodeRequest,
-} from "../models/auth";
+import * as SecureStore from 'expo-secure-store';
+import type { AuthResponse, User } from '../models/auth';
 
-const BASE_URL = "http://laravel-auth-api-opal.vercel.app/api";
+// Get the base URL from environment variables
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://laravel-auth-api-opal.vercel.app/api';
 
-const jsonHeaders = (token?: string) => ({
-  Accept: "application/json",
-  "Content-Type": "application/json",
-  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-});
+// Helper function to store token securely
+export const storeToken = async (token: string) => {
+  await SecureStore.setItemAsync('token', token);
+};
 
-const parseJson = async <T>(response: Response): Promise<T | null> => {
-  try {
-    return await response.json();
-  } catch {
-    return null;
+// Helper function to get token securely
+export const getToken = async (): Promise<string | null> => {
+  return await SecureStore.getItemAsync('token');
+};
+
+// Helper function to remove token securely
+export const removeToken = async () => {
+  await SecureStore.deleteItemAsync('token');
+};
+
+// Helper function to get headers with auth token
+const getHeaders = async (includeContentType = true): Promise<Record<string, string>> => {
+  const token = await getToken();
+  return {
+    ...(includeContentType ? { 'Content-Type': 'application/json' } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
+// Handle API response
+const handleResponse = async (response: Response): Promise<any> => {
+  const text = await response.text();
+  const data = text
+    ? (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { message: text };
+        }
+      })()
+    : {};
+
+  if (!response.ok) {
+    const message =
+      data.message ||
+      Object.values(data.errors || {})
+        .flat()
+        .join('\n') ||
+      `HTTP error! status: ${response.status}`;
+    throw new Error(message);
   }
+
+  return data;
 };
 
-const request = async <T>(
-  path: string,
-  options: RequestInit = {},
-  token?: string,
-): Promise<T | null> => {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      ...jsonHeaders(token),
-      ...(options.headers ?? {}),
-    },
-  });
-
-  return parseJson<T>(response);
+export type UserData = {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
 };
 
-export const getAuthToken = (response: AuthResponse | null) => {
-  if (!response) return null;
-  if (response.token) return response.token;
-  if (response.access_token) return response.access_token;
-  const data = response.data;
-  if (data && "token" in data && typeof data.token === "string") {
-    return data.token;
-  }
-  return null;
+export type Credentials = {
+  email: string;
+  password: string;
 };
 
-export const getAuthUser = (response: AuthResponse | null): User | null => {
+export type ProfileData = {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+};
+
+export type PasswordData = {
+  current_password?: string;
+  password?: string;
+  password_confirmation?: string;
+};
+
+const unwrapUser = (response: any): User | null => {
   if (!response) return null;
   if (response.user) return response.user;
-  const data = response.data;
-  if (!data) return null;
-  if ("user" in data && data.user) return data.user;
-  if ("email" in data) return data as User;
+  if (response.data?.user) return response.data.user;
+  if (response.data?.data?.user) return response.data.data.user;
+  if (response.data?.email) return response.data;
+  if (response.email) return response;
   return null;
 };
 
-export const isUserVerified = (user: User | null) => {
-  if (!user) return false;
-  return user.is_verify === true || Boolean(user.email_verified_at);
+const unwrapToken = (response: any): string | null => {
+  return (
+    response?.token ||
+    response?.access_token ||
+    response?.data?.token ||
+    response?.data?.access_token ||
+    response?.data?.data?.token ||
+    response?.data?.data?.access_token ||
+    null
+  );
 };
 
-export const registerUser = (data: RegisterRequest) =>
-  request<AuthResponse>("/register", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+const normalizeAuthResponse = (response: AuthResponse) => ({
+  ...response,
+  token: unwrapToken(response),
+  user: unwrapUser(response),
+});
 
-export const loginUser = (data: LoginRequest) =>
-  request<AuthResponse>("/login", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+export const authService = {
+  // Register a new user
+  register: async (userData: UserData) => {
+    const response = await fetch(`${BASE_URL}/register`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify(userData),
+    });
+    const result = normalizeAuthResponse(await handleResponse(response));
+    if (result.token) await storeToken(result.token);
+    return result;
+  },
 
-export const logoutUser = (token: string) =>
-  request<{ message?: string }>("/logout", { method: "POST" }, token);
+  // Login user
+  login: async (credentials: Credentials) => {
+    const response = await fetch(`${BASE_URL}/login`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify(credentials),
+    });
+    const result = normalizeAuthResponse(await handleResponse(response));
+    if (result.token) await storeToken(result.token);
+    return result;
+  },
 
-export const sendVerifyEmail = (token: string) =>
-  request<{ message?: string }>("/email/verify/send", { method: "POST" }, token);
+  // Send email verification
+  sendEmailVerification: async () => {
+    const response = await fetch(`${BASE_URL}/email/verify/send`, {
+      method: 'POST',
+      headers: await getHeaders(),
+    });
+    await handleResponse(response);
+  },
 
-export const verifyEmailCode = (data: VerifyCodeRequest, token: string) =>
-  request<AuthResponse>("/email/verify/check", {
-    method: "POST",
-    body: JSON.stringify(data),
-  }, token);
+  // Verify email with code
+  verifyEmail: async (code: string) => {
+    const response = await fetch(`${BASE_URL}/email/verify/check`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ code }),
+    });
+    await handleResponse(response);
+  },
 
-export const sendForgotPasswordCode = (data: ForgotPasswordRequest) =>
-  request<{ message?: string; errors?: Record<string, string[]> }>(
-    "/forgot-password/send-code",
-    {
-      method: "POST",
+  // Logout user
+  logout: async () => {
+    const response = await fetch(`${BASE_URL}/logout`, {
+      method: 'POST',
+      headers: await getHeaders(),
+    });
+    await handleResponse(response);
+    await removeToken();
+  },
+
+  // Forgot password: send reset code
+  forgotPasswordSendCode: async (email: string) => {
+    const response = await fetch(`${BASE_URL}/forgot-password/send-code`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ email }),
+    });
+    await handleResponse(response);
+  },
+
+  // Forgot password: reset password with code
+  forgotPasswordReset: async (data: { email: string; code: string; password: string; password_confirmation: string }) => {
+    const response = await fetch(`${BASE_URL}/forgot-password/reset`, {
+      method: 'POST',
+      headers: await getHeaders(),
       body: JSON.stringify(data),
-    },
-  );
+    });
+    await handleResponse(response);
+  },
 
-export const resetPassword = (data: ResetPasswordRequest) =>
-  request<{ message?: string; errors?: Record<string, string[]> }>(
-    "/forgot-password/reset",
-    {
-      method: "POST",
-      body: JSON.stringify(data),
-    },
-  );
+  // Get user profile
+  getProfile: async () => {
+    const response = await fetch(`${BASE_URL}/user`, {
+      method: 'GET',
+      headers: await getHeaders(),
+    });
+    const result = await handleResponse(response);
+    return unwrapUser(result) || result;
+  },
 
-export const getUser = (token: string) =>
-  request<User | { user?: User; data?: User }>("/user", { method: "GET" }, token);
+  // Update user profile
+  updateProfile: async (profileData: ProfileData) => {
+    const response = await fetch(`${BASE_URL}/user/profile`, {
+      method: 'PUT',
+      headers: await getHeaders(),
+      body: JSON.stringify(profileData),
+    });
+    const result = await handleResponse(response);
+    return unwrapUser(result) || result;
+  },
 
-export const updateProfile = (data: UpdateProfileRequest, token: string) =>
-  request<User | { user?: User; data?: User }>("/user/profile", {
-    method: "PUT",
-    body: JSON.stringify(data),
-  }, token);
+  // Update user password
+  updatePassword: async (passwordData: PasswordData) => {
+    const response = await fetch(`${BASE_URL}/user/password`, {
+      method: 'PUT',
+      headers: await getHeaders(),
+      body: JSON.stringify(passwordData),
+    });
+    return handleResponse(response);
+  },
 
-export const updatePassword = (data: UpdatePasswordRequest, token: string) =>
-  request<{ message?: string; errors?: Record<string, string[]> }>(
-    "/user/password",
-    {
-      method: "PUT",
-      body: JSON.stringify(data),
-    },
-    token,
-  );
+  // Update profile photo
+  updateProfilePhoto: async (photoUri: string) => {
+    const formData = new FormData();
+    formData.append('profile_photo', {
+      uri: photoUri,
+      name: 'profile_photo.jpg',
+      type: 'image/jpeg',
+    } as any);
 
-export const updateProfilePhoto = (
-  data: UpdateProfilePhotoRequest,
-  token: string,
-) =>
-  request<{ message?: string; errors?: Record<string, string[]> }>(
-    "/user/profile-photo",
-    {
-      method: "POST",
-      body: JSON.stringify(data),
-    },
-    token,
-  );
+    const response = await fetch(`${BASE_URL}/user/profile-photo`, {
+      method: 'POST',
+      headers: {
+        ...(await getHeaders(false)),
+      },
+      body: formData,
+    });
+    const result = await handleResponse(response);
+    return unwrapUser(result) || result;
+  },
 
-export const unwrapUser = (response: User | { user?: User; data?: User } | null) => {
-  if (!response) return null;
-  if ("user" in response && response.user) return response.user;
-  if ("data" in response && response.data) return response.data;
-  if ("email" in response) return response as User;
-  return null;
-};
+  // Refresh user data
+  refreshUser: async () => {
+    return authService.getProfile();
+  },
 
-export const getUserData = (token: string) =>
-  request<User | { user?: User; data?: User }>("/user", { method: "GET" }, token);
-
-const refreshUserData = async (token: string): Promise<User | null> => {
-  const response = await getUserData(token);
-  return unwrapUser(response);
+  // Unwrap user response to handle different API response formats
+  unwrapUser,
+  unwrapToken,
+  normalizeAuthResponse,
 };

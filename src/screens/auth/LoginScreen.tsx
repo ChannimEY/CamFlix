@@ -15,37 +15,64 @@ import { useNavigation } from "@react-navigation/native";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const { login } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const validateEmail = (email: string) => {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+    setEmailError("");
+    setPasswordError("");
+
+    if (!email) {
+      setEmailError("Email is required");
       return;
     }
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email");
+      return;
+    }
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      return;
+    }
+
     setIsLoading(true);
     try {
       await login(email, password);
-      (navigation as any).replace("Tab");
     } catch (error) {
-      Alert.alert("Error", "Invalid credentials");
+      Alert.alert("Error", error instanceof Error ? error.message : "Invalid credentials");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
-        <Text style={styles.greeting}>Hi, All User</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>
           Welcome back! Please enter your details.
         </Text>
 
         <TextInput
-          style={styles.input}
+          style={[styles.input, emailError && styles.inputError]}
           placeholder="Email Address"
           placeholderTextColor="#aaa"
           value={email}
@@ -53,10 +80,11 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
         <View style={styles.passwordContainer}>
           <TextInput
-            style={styles.passwordInput}
+            style={[styles.passwordInput, passwordError && styles.inputError]}
             placeholder="Password"
             placeholderTextColor="#aaa"
             secureTextEntry={secure}
@@ -71,15 +99,20 @@ export default function LoginScreen() {
             />
           </TouchableOpacity>
         </View>
+        {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => (navigation as any).navigate("ForgotPassword")}>
           <Text style={styles.forgot}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-          {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginText}>Login</Text>}
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading || authLoading}>
+          {isLoading || authLoading ? (
+            <ActivityIndicator color="#fff" size={20} />
+          ) : (
+            <Text style={styles.loginText}>Login</Text>
+          )}
         </TouchableOpacity>
-        
+
         <View style={styles.registerLinkContainer}>
           <Text style={styles.registerText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => (navigation as any).navigate("Register")}>
@@ -101,6 +134,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 30,
+    marginLeft: -10,
   },
   title: {
     color: "#fff",
@@ -125,6 +159,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,
+  },
+  inputError: {
+    borderColor: "#FF0000",
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginBottom: 10,
   },
   passwordContainer: {
     flexDirection: "row",

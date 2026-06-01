@@ -27,7 +27,6 @@ export default function ProfileScreen() {
     setShowLogoutConfirm(false);
     try {
       await logout();
-      (navigation as any).replace("Welcome");
     } catch (error) {
       Alert.alert("Error", "Failed to logout");
     }

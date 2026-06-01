@@ -4,6 +4,7 @@ export interface User {
   last_name?: string;
   name?: string;
   email: string;
+  is_verified?: boolean;
   is_verify?: boolean;
   email_verified_at?: string | null;
   profile_photo?: string | null;

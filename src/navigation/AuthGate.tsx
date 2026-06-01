@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Navigation } from "./Navigation";
 
 function AuthGate() {
-  const { user, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (

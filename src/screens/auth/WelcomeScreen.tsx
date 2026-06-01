@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     alignItems: "center",
-    marginTop: 70,
+    marginTop: 15,
   },
 
   logo: {
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -40,
+    marginBottom: 20,
   },
 
   loginText: {

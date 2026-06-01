@@ -14,7 +14,6 @@ export default function LogoutScreen({ navigation }: { navigation?: any }) {
 
   const handleConfirmLogout = async () => {
     await logout();
-    navigation?.replace("Welcome");
   };
 
   return (

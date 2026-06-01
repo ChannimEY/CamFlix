@@ -12,12 +12,11 @@ import {
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
-import { updateProfile, unwrapUser } from "../../api/services/authService";
 import { useNavigation } from "@react-navigation/native";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
-  const { user, token, refreshUser } = useAuth();
+  const { user, token, updateProfile } = useAuth();
   const [firstName, setFirstName] = useState(user?.first_name || user?.name?.split(" ")[0] || "");
   const [lastName, setLastName] = useState(user?.last_name || user?.name?.split(" ")[1] || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -27,16 +26,13 @@ export default function EditProfileScreen() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const response = await updateProfile({ first_name: firstName, last_name: lastName, email }, token);
-      const updatedUser = unwrapUser(response);
-      if (updatedUser) {
-        await refreshUser();
-        Alert.alert("Success", "Profile updated successfully");
-      }
+      await updateProfile({ first_name: firstName, last_name: lastName, email });
+      Alert.alert("Success", "Profile updated successfully");
     } catch (error) {
-      Alert.alert("Error", "Failed to update profile");
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to update profile");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const getInitials = () => {

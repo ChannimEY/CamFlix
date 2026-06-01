@@ -8,85 +8,135 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 
-const RegisterScreen = () => {
+export default function RegisterScreen() {
   const navigation = useNavigation();
-  const { register } = useAuth();
+  const { register, isLoading: authLoading } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const validateEmail = (email: string) => {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  };
 
   const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields");
+    setFirstNameError("");
+    setLastNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+
+    if (!firstName) {
+      setFirstNameError("First name is required");
+      return;
+    }
+    if (!lastName) {
+      setLastNameError("Last name is required");
+      return;
+    }
+    if (!email) {
+      setEmailError("Email is required");
+      return;
+    }
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email");
+      return;
+    }
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      return;
+    }
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password");
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      setConfirmPasswordError("Passwords do not match");
       return;
     }
+
     setIsLoading(true);
     try {
-      await register({
-        firstName,
-        lastName,
-        email,
-        password,
-        password_confirmation: confirmPassword,
-      });
-      (navigation as any).replace("Tab");
+      await register(firstName, lastName, email, password);
     } catch (error) {
-      Alert.alert("Error", "Registration failed");
+      Alert.alert("Error", error instanceof Error ? error.message : "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
-        <Text style={styles.header}>Let's get started</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.headerText}>Let's get started</Text>
         <Text style={styles.subtext}>The latest movies and series are here</Text>
 
         <TextInput
-          style={styles.input}
+          style={[styles.input, firstNameError && styles.inputError]}
           placeholder="First Name"
           value={firstName}
           onChangeText={setFirstName}
         />
+        {firstNameError && <Text style={styles.errorText}>{firstNameError}</Text>}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, lastNameError && styles.inputError]}
           placeholder="Last Name"
           value={lastName}
           onChangeText={setLastName}
         />
+        {lastNameError && <Text style={styles.errorText}>{lastNameError}</Text>}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, emailError && styles.inputError]}
           placeholder="Email Address"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
         />
+        {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, passwordError && styles.inputError]}
           placeholder="Password"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
+        {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, confirmPasswordError && styles.inputError]}
           placeholder="Confirm Password"
           secureTextEntry
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />
+        {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
 
         <View style={styles.checkboxContainer}>
           <Text style={styles.checkboxText}>
@@ -96,8 +146,8 @@ const RegisterScreen = () => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={isLoading}>
-          {isLoading ? (
+        <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={isLoading || authLoading}>
+          {isLoading || authLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.buttonText}>Sign Up</Text>
@@ -113,9 +163,7 @@ const RegisterScreen = () => {
       </View>
     </SafeAreaView>
   );
-};
-
-export default RegisterScreen;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -130,6 +178,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    marginLeft: -10,
+  },
+  headerText: {
     fontSize: 20,
     color: "#fcf5f5",
     textAlign: "center",
@@ -142,17 +196,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     height: 100,
   },
-  Text: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
   input: {
     backgroundColor: "#1e1e1e",
     color: "#fff",
     padding: 10,
     borderRadius: 12,
     marginBottom: 20,
+  },
+  inputError: {
+    borderColor: "#FF0000",
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginBottom: 10,
   },
   checkboxContainer: {
     flexDirection: "row",

@@ -1,93 +1,267 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import * as SecureStore from "expo-secure-store";
-import { User } from "../api/models/auth";
-import { getAuthToken, getAuthUser, loginUser, registerUser, getUser, logoutUser, unwrapUser } from "../api/services/authService";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService, getToken, removeToken, storeToken } from '../api/services/authService';
+import type { User } from '../api/models/auth';
+
+type AuthInitialRoute = 'Welcome' | 'Login';
 
 interface AuthContextType {
-  user: User | null;
   token: string | null;
+  user: User | null;
+  isVerified: boolean;
   isLoading: boolean;
+  authInitialRoute: AuthInitialRoute;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { firstName: string; lastName: string; email: string; password: string; password_confirmation: string }) => Promise<void>;
+  register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
+  sendEmailVerification: () => Promise<void>;
+  verifyEmail: (code: string) => Promise<void>;
   logout: () => Promise<void>;
+  forgotPasswordSendCode: (email: string) => Promise<void>;
+  forgotPasswordReset: (email: string, code: string, password: string, passwordConfirmation: string) => Promise<void>;
+  getProfile: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string, newPasswordConfirmation: string) => Promise<void>;
+  updateProfilePhoto: (photoUri: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = "auth_token";
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [authInitialRoute, setAuthInitialRoute] = useState<AuthInitialRoute>('Welcome');
+
+  const getIsVerified = (nextUser: User | null) =>
+    Boolean(nextUser?.is_verified || nextUser?.is_verify || nextUser?.email_verified_at);
+
+  const setAuthUser = (nextUser: User | null) => {
+    setUser(nextUser);
+    setIsVerified(getIsVerified(nextUser));
+  };
 
   useEffect(() => {
-    const loadToken = async () => {
-      const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
-      if (storedToken) {
-        setToken(storedToken);
-        const response = await getUser(storedToken);
-        setUser(unwrapUser(response));
+    const loadUser = async () => {
+      try {
+        const storedToken = await getToken();
+        if (storedToken) {
+          setToken(storedToken);
+          const profile = await authService.getProfile();
+          setAuthUser(profile);
+        }
+      } catch (error) {
+        console.error('Failed to load user', error);
+        await removeToken();
+        setToken(null);
+        setAuthUser(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
-    loadToken();
+
+    loadUser();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await loginUser({ email, password });
-    const newToken = getAuthToken(response);
-    const newUser = getAuthUser(response);
-    if (newToken) {
-      await SecureStore.setItemAsync(TOKEN_KEY, newToken);
-      setToken(newToken);
-      setUser(newUser);
+    try {
+      setIsLoading(true);
+      const response = await authService.login({ email, password });
+      setToken(response.token);
+      setAuthUser(response.user);
+      setAuthInitialRoute('Welcome');
+      if (response.token) await storeToken(response.token);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const register = async (data: { firstName: string; lastName: string; email: string; password: string; password_confirmation: string }) => {
-    const response = await registerUser({
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      password: data.password,
-      password_confirmation: data.password_confirmation,
-    });
-    const newToken = getAuthToken(response);
-    const newUser = getAuthUser(response);
-    if (newToken) {
-      await SecureStore.setItemAsync(TOKEN_KEY, newToken);
-      setToken(newToken);
-      setUser(newUser);
+  const register = async (firstName: string, lastName: string, email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.register({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+        password_confirmation: password,
+      });
+      setToken(response.token);
+      setAuthUser(response.user);
+      if (response.token) await storeToken(response.token);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendEmailVerification = async () => {
+    try {
+      setIsLoading(true);
+      await authService.sendEmailVerification();
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmail = async (code: string) => {
+    try {
+      setIsLoading(true);
+      await authService.verifyEmail(code);
+      await removeToken();
+      setToken(null);
+      setAuthUser(null);
+      setAuthInitialRoute('Login');
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    if (token) {
-      await logoutUser(token);
+    try {
+      setIsLoading(true);
+      await authService.logout();
+    } finally {
+      setToken(null);
+      setAuthUser(null);
+      setAuthInitialRoute('Welcome');
+      await removeToken();
+      setIsLoading(false);
     }
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    setToken(null);
-    setUser(null);
+  };
+
+  const forgotPasswordSendCode = async (email: string) => {
+    try {
+      setIsLoading(true);
+      await authService.forgotPasswordSendCode(email);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forgotPasswordReset = async (email: string, code: string, password: string, passwordConfirmation: string) => {
+    try {
+      setIsLoading(true);
+      await authService.forgotPasswordReset({
+        email,
+        code,
+        password,
+        password_confirmation: passwordConfirmation,
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getProfile = async () => {
+    try {
+      setIsLoading(true);
+      const profile = await authService.getProfile();
+      setAuthUser(profile);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const refreshUser = async () => {
-    if (token) {
-      const response = await getUser(token);
-      setUser(unwrapUser(response));
+    try {
+      setIsLoading(true);
+      const profile = await authService.refreshUser();
+      setAuthUser(profile);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      setIsLoading(true);
+      const updatedUser = await authService.updateProfile(data);
+      setAuthUser(updatedUser);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string, newPasswordConfirmation: string) => {
+    try {
+      setIsLoading(true);
+      await authService.updatePassword({
+        current_password: currentPassword,
+        password: newPassword,
+        password_confirmation: newPasswordConfirmation,
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfilePhoto = async (photoUri: string) => {
+    try {
+      setIsLoading(true);
+      const updatedUser = await authService.updateProfilePhoto(photoUri);
+      setAuthUser(updatedUser);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        isVerified,
+        isLoading,
+        authInitialRoute,
+        login,
+        register,
+        sendEmailVerification,
+        verifyEmail,
+        logout,
+        forgotPasswordSendCode,
+        forgotPasswordReset,
+        getProfile,
+        updateProfile,
+        updatePassword,
+        updateProfilePhoto,
+        refreshUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
 };
