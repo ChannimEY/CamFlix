@@ -18,7 +18,7 @@ export default function NewPasswordScreen() {
   const route = useRoute();
   const { forgotPasswordReset, isLoading: authLoading } = useAuth();
   const email = (route.params as any)?.email || "";
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [secureNew, setSecureNew] = useState(true);
@@ -28,16 +28,37 @@ export default function NewPasswordScreen() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
+  const handleCodeChange = (text: string, index: number) => {
+    const value = text.replace(/\D/g, "");
+    const nextCode = [...code];
+
+    if (value.length > 1) {
+      value
+        .slice(0, 6)
+        .split("")
+        .forEach((digit, digitIndex) => {
+          nextCode[digitIndex] = digit;
+        });
+    } else {
+      nextCode[index] = value;
+    }
+
+    setCode(nextCode);
+    if (codeError) setCodeError("");
+  };
+
   const handleReset = async () => {
     setCodeError("");
     setPasswordError("");
     setConfirmPasswordError("");
 
-    if (!code) {
+    const codeValue = code.join("");
+
+    if (!codeValue) {
       setCodeError("Code is required");
       return;
     }
-    if (code.length !== 6) {
+    if (codeValue.length !== 6) {
       setCodeError("Code must be 6 digits");
       return;
     }
@@ -65,9 +86,8 @@ export default function NewPasswordScreen() {
 
     setIsLoading(true);
     try {
-      await forgotPasswordReset(email, code, newPassword, confirmPassword);
+      await forgotPasswordReset(email, codeValue, newPassword, confirmPassword);
       Alert.alert("Success", "Password has been reset");
-      (navigation as any).navigate("Login");
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Failed to reset password");
     } finally {
@@ -83,24 +103,27 @@ export default function NewPasswordScreen() {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtitle}>Enter your new password</Text>
+        <Text style={styles.subtitle}>
+          Enter the 6 digit code sent to {email || "your email"}, then create a new password.
+        </Text>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.codeInput, codeError && styles.inputError]}
-            placeholder="Verification Code"
-            placeholderTextColor="#aaa"
-            value={code}
-            onChangeText={setCode}
-            keyboardType="number-pad"
-            maxLength={6}
-          />
-          {codeError && <Text style={styles.errorText}>{codeError}</Text>}
+        <View style={styles.codeContainer}>
+          {code.map((digit, index) => (
+            <TextInput
+              key={index}
+              style={[styles.codeInput, codeError && styles.inputError]}
+              keyboardType="number-pad"
+              maxLength={index === 0 ? 6 : 1}
+              value={digit}
+              onChangeText={(text) => handleCodeChange(text, index)}
+            />
+          ))}
         </View>
+        {codeError && <Text style={styles.errorText}>{codeError}</Text>}
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, passwordError && styles.inputError]}>
           <TextInput
-            style={[styles.passwordInput, passwordError && styles.inputError]}
+            style={styles.passwordInput}
             placeholder="New Password"
             placeholderTextColor="#aaa"
             secureTextEntry={secureNew}
@@ -114,12 +137,12 @@ export default function NewPasswordScreen() {
               color="#aaa"
             />
           </TouchableOpacity>
-          {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
         </View>
+        {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, confirmPasswordError && styles.inputError]}>
           <TextInput
-            style={[styles.passwordInput, confirmPasswordError && styles.inputError]}
+            style={styles.passwordInput}
             placeholder="Confirm Password"
             placeholderTextColor="#aaa"
             secureTextEntry={secureConfirm}
@@ -133,8 +156,8 @@ export default function NewPasswordScreen() {
               color="#aaa"
             />
           </TouchableOpacity>
-          {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
         </View>
+        {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
 
         <TouchableOpacity style={styles.resetButton} onPress={handleReset} disabled={isLoading || authLoading}>
           {isLoading || authLoading ? (
@@ -179,10 +202,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 15,
   },
+  codeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
   codeInput: {
-    flex: 1,
+    width: 48,
+    height: 52,
+    borderRadius: 8,
+    backgroundColor: "#1e1e1e",
     color: "#fff",
-    paddingVertical: 12,
+    fontSize: 18,
+    textAlign: "center",
   },
   passwordInput: {
     flex: 1,

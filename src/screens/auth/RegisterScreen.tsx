@@ -21,6 +21,8 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [securePassword, setSecurePassword] = useState(true);
+  const [secureConfirmPassword, setSecureConfirmPassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
@@ -120,22 +122,34 @@ export default function RegisterScreen() {
         />
         {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
-        <TextInput
-          style={[styles.input, passwordError && styles.inputError]}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry={securePassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity onPress={() => setSecurePassword(!securePassword)}>
+            <Ionicons name={securePassword ? "eye-off" : "eye"} size={22} color="#aaa" />
+          </TouchableOpacity>
+        </View>
         {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
-        <TextInput
-          style={[styles.input, confirmPasswordError && styles.inputError]}
-          placeholder="Confirm Password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
+        <View style={[styles.passwordContainer, confirmPasswordError && styles.inputError]}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Confirm Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry={secureConfirmPassword}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+          <TouchableOpacity onPress={() => setSecureConfirmPassword(!secureConfirmPassword)}>
+            <Ionicons name={secureConfirmPassword ? "eye-off" : "eye"} size={22} color="#aaa" />
+          </TouchableOpacity>
+        </View>
         {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
 
         <View style={styles.checkboxContainer}>
@@ -198,10 +212,23 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#1e1e1e",
-    color: "#fff",
+    color: "#ffffff",
     padding: 10,
     borderRadius: 12,
     marginBottom: 20,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+  },
+  passwordInput: {
+    flex: 1,
+    color: "#ffffff",
+    paddingVertical: 10,
   },
   inputError: {
     borderColor: "#FF0000",

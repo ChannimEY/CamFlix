@@ -11,16 +11,18 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
-  const { user, token, updateProfile } = useAuth();
+  const { user, token, updateProfile, updateProfilePhoto } = useAuth();
   const [firstName, setFirstName] = useState(user?.first_name || user?.name?.split(" ")[0] || "");
   const [lastName, setLastName] = useState(user?.last_name || user?.name?.split(" ")[1] || "");
   const [email, setEmail] = useState(user?.email || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPhotoLoading, setIsPhotoLoading] = useState(false);
 
   const handleSave = async () => {
     if (!token) return;
@@ -32,6 +34,38 @@ export default function EditProfileScreen() {
       Alert.alert("Error", error instanceof Error ? error.message : "Failed to update profile");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePickPhoto = async () => {
+    if (!token || isPhotoLoading) return;
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Please allow photo library access to change your profile image.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled) return;
+
+    const asset = result.assets?.[0];
+    if (!asset?.uri) return;
+
+    setIsPhotoLoading(true);
+    try {
+      await updateProfilePhoto(asset.uri, asset.fileName, asset.mimeType);
+      Alert.alert("Success", "Profile photo updated successfully");
+    } catch (error) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to update profile photo");
+    } finally {
+      setIsPhotoLoading(false);
     }
   };
 
@@ -75,8 +109,12 @@ export default function EditProfileScreen() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.editIcon}>
-            <FontAwesome name="pencil" size={16} color="#00D9F5" />
+          <TouchableOpacity style={styles.editIcon} onPress={handlePickPhoto} disabled={isPhotoLoading}>
+            {isPhotoLoading ? (
+              <ActivityIndicator size="small" color="#00D9F5" />
+            ) : (
+              <FontAwesome name="pencil" size={16} color="#00D9F5" />
+            )}
           </TouchableOpacity>
         </View>
 

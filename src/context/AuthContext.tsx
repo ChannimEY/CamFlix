@@ -14,13 +14,14 @@ interface AuthContextType {
   register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
   sendEmailVerification: () => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
+  cancelVerification: () => Promise<void>;
   logout: () => Promise<void>;
   forgotPasswordSendCode: (email: string) => Promise<void>;
   forgotPasswordReset: (email: string, code: string, password: string, passwordConfirmation: string) => Promise<void>;
   getProfile: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string, newPasswordConfirmation: string) => Promise<void>;
-  updateProfilePhoto: (photoUri: string) => Promise<void>;
+  updateProfilePhoto: (photoUri: string, fileName?: string | null, mimeType?: string | null) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -45,8 +46,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authInitialRoute, setAuthInitialRoute] = useState<AuthInitialRoute>('Welcome');
 
+  const isTruthyVerifiedValue = (value: unknown) =>
+    value === true || value === 1 || value === '1' || value === 'true';
+
   const getIsVerified = (nextUser: User | null) =>
-    Boolean(nextUser?.is_verified || nextUser?.is_verify || nextUser?.email_verified_at);
+    Boolean(
+      isTruthyVerifiedValue(nextUser?.is_verified) ||
+        isTruthyVerifiedValue(nextUser?.is_verify) ||
+        nextUser?.email_verified_at,
+    );
 
   const setAuthUser = (nextUser: User | null) => {
     setUser(nextUser);
@@ -79,10 +87,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       const response = await authService.login({ email, password });
+      if (!response.token) {
+        throw new Error('Please verify your email before logging in.');
+      }
       setToken(response.token);
-      setAuthUser(response.user);
+      const nextUser = response.user || (response.token ? await authService.getProfile() : null);
+      setAuthUser(nextUser);
       setAuthInitialRoute('Welcome');
-      if (response.token) await storeToken(response.token);
+      await storeToken(response.token);
+      if (nextUser && !getIsVerified(nextUser)) {
+        await authService.sendEmailVerification().catch(() => undefined);
+      }
     } catch (error) {
       throw error;
     } finally {
@@ -101,8 +116,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password_confirmation: password,
       });
       setToken(response.token);
-      setAuthUser(response.user);
+      const nextUser = response.user || (response.token ? await authService.getProfile() : null);
+      setAuthUser(nextUser);
       if (response.token) await storeToken(response.token);
+      if (nextUser && !getIsVerified(nextUser)) {
+        await authService.sendEmailVerification().catch(() => undefined);
+      }
     } catch (error) {
       throw error;
     } finally {
@@ -125,12 +144,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await authService.verifyEmail(code);
+      const profile = await authService.getProfile();
+      setAuthUser(profile);
+      setAuthInitialRoute('Welcome');
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelVerification = async () => {
+    setIsLoading(true);
+    try {
       await removeToken();
       setToken(null);
       setAuthUser(null);
       setAuthInitialRoute('Login');
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -150,25 +180,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const forgotPasswordSendCode = async (email: string) => {
-    try {
-      setIsLoading(true);
-      await authService.forgotPasswordSendCode(email);
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+    await authService.forgotPasswordSendCode(email);
   };
 
   const forgotPasswordReset = async (email: string, code: string, password: string, passwordConfirmation: string) => {
     try {
       setIsLoading(true);
-      await authService.forgotPasswordReset({
+      const resetResponse = await authService.forgotPasswordReset({
         email,
         code,
         password,
         password_confirmation: passwordConfirmation,
       });
+
+      const authResponse = resetResponse.token
+        ? resetResponse
+        : await authService.login({ email, password });
+
+      if (!authResponse.token) {
+        throw new Error('Password reset succeeded, but auto login failed.');
+      }
+
+      await storeToken(authResponse.token);
+      setToken(authResponse.token);
+
+      const nextUser = authResponse.user || await authService.getProfile();
+      setAuthUser(nextUser);
+      setAuthInitialRoute('Welcome');
     } catch (error) {
       throw error;
     } finally {
@@ -204,7 +242,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       const updatedUser = await authService.updateProfile(data);
-      setAuthUser(updatedUser);
+      const nextUser = authService.unwrapUser(updatedUser) || updatedUser;
+      setAuthUser(nextUser);
     } catch (error) {
       throw error;
     } finally {
@@ -227,11 +266,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const updateProfilePhoto = async (photoUri: string) => {
+  const updateProfilePhoto = async (photoUri: string, fileName?: string | null, mimeType?: string | null) => {
     try {
       setIsLoading(true);
-      const updatedUser = await authService.updateProfilePhoto(photoUri);
-      setAuthUser(updatedUser);
+      const updatedUser = await authService.updateProfilePhoto(photoUri, fileName, mimeType);
+      const nextUser = authService.unwrapUser(updatedUser) || updatedUser;
+      setAuthUser(nextUser);
     } catch (error) {
       throw error;
     } finally {
@@ -251,6 +291,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         register,
         sendEmailVerification,
         verifyEmail,
+        cancelVerification,
         logout,
         forgotPasswordSendCode,
         forgotPasswordReset,
