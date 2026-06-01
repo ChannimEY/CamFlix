@@ -48,7 +48,10 @@ const handleResponse = async (response: Response): Promise<any> => {
         .flat()
         .join('\n') ||
       `HTTP error! status: ${response.status}`;
-    throw new Error(message);
+    const error = new Error(message) as Error & { status?: number; data?: any };
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
   return data;
@@ -127,7 +130,18 @@ export const authService = {
       headers: await getHeaders(),
       body: JSON.stringify(credentials),
     });
-    const result = normalizeAuthResponse(await handleResponse(response));
+    let result;
+    try {
+      result = normalizeAuthResponse(await handleResponse(response));
+    } catch (error) {
+      const apiError = error as Error & { data?: AuthResponse };
+      const authResult = normalizeAuthResponse(apiError.data || {});
+      if (authResult.token) {
+        result = authResult;
+      } else {
+        throw error;
+      }
+    }
     if (result.token) await storeToken(result.token);
     return result;
   },
@@ -178,7 +192,9 @@ export const authService = {
       headers: await getHeaders(),
       body: JSON.stringify(data),
     });
-    await handleResponse(response);
+    const result = normalizeAuthResponse(await handleResponse(response));
+    if (result.token) await storeToken(result.token);
+    return result;
   },
 
   // Get user profile
@@ -199,7 +215,7 @@ export const authService = {
       body: JSON.stringify(profileData),
     });
     const result = await handleResponse(response);
-    return unwrapUser(result) || result;
+    return unwrapUser(result) || authService.getProfile();
   },
 
   // Update user password
@@ -213,13 +229,27 @@ export const authService = {
   },
 
   // Update profile photo
-  updateProfilePhoto: async (photoUri: string) => {
+  updateProfilePhoto: async (photoUri: string, fileName?: string | null, mimeType?: string | null) => {
     const formData = new FormData();
-    formData.append('profile_photo', {
+    const safeFileName = fileName || photoUri.split('/').pop() || 'profile-photo.jpg';
+    const extension = safeFileName.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
+    const safeMimeType = mimeType || (
+      extension === 'png'
+        ? 'image/png'
+        : extension === 'webp'
+          ? 'image/webp'
+          : 'image/jpeg'
+    );
+
+    const imageFile = {
       uri: photoUri,
-      name: 'profile_photo.jpg',
-      type: 'image/jpeg',
-    } as any);
+      name: safeFileName,
+      type: safeMimeType,
+    } as any;
+
+    formData.append('image', imageFile);
+    formData.append('photo', imageFile);
+    formData.append('profile_photo', imageFile);
 
     const response = await fetch(`${BASE_URL}/user/profile-photo`, {
       method: 'POST',
@@ -229,7 +259,7 @@ export const authService = {
       body: formData,
     });
     const result = await handleResponse(response);
-    return unwrapUser(result) || result;
+    return unwrapUser(result) || authService.getProfile();
   },
 
   // Refresh user data

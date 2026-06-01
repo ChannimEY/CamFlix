@@ -82,9 +82,9 @@ export default function LoginScreen() {
         />
         {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
           <TextInput
-            style={[styles.passwordInput, passwordError && styles.inputError]}
+            style={styles.passwordInput}
             placeholder="Password"
             placeholderTextColor="#aaa"
             secureTextEntry={secure}

@@ -10,12 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function VerifyCodeScreen() {
-  const navigation = useNavigation();
-  const { verifyEmail, sendEmailVerification, user, isLoading: authLoading } = useAuth();
+  const { verifyEmail, sendEmailVerification, cancelVerification, user, isLoading: authLoading } = useAuth();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,9 +55,17 @@ export default function VerifyCodeScreen() {
     }
   };
 
+  const handleBack = async () => {
+    if (isLoading || authLoading) return;
+    await cancelVerification();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
         {user ? (
           <Text style={styles.subtitle}>
             We have just sent you 6 digit code via your email {user.email}.
@@ -102,6 +108,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121212",
     padding: 20,
+    justifyContent: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    zIndex: 2,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
     justifyContent: "center",
   },
   subtitle: {

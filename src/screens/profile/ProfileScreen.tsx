@@ -92,7 +92,7 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.item}>
             <Text style={styles.itemText}>Member</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.item}>
+          <TouchableOpacity style={styles.item} onPress={() => (navigation as any).navigate("ChangePassword")}>
             <Text style={styles.itemText}>Change Password</Text>
           </TouchableOpacity>
 
