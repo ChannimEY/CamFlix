@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,17 +6,57 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
-export default function EditProfileScreen({ navigation }: { navigation?: any }) {
+export default function EditProfileScreen() {
+  const navigation = useNavigation();
+  const { user, token, updateProfile } = useAuth();
+  const [firstName, setFirstName] = useState(user?.first_name || user?.name?.split(" ")[0] || "");
+  const [lastName, setLastName] = useState(user?.last_name || user?.name?.split(" ")[1] || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!token) return;
+    setIsLoading(true);
+    try {
+      await updateProfile({ first_name: firstName, last_name: lastName, email });
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (error) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInitials = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+    }
+    if (user?.name) {
+      return user.name[0].toUpperCase();
+    }
+    return user?.email?.[0]?.toUpperCase() || "?";
+  };
+
+  const getDisplayName = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    if (user?.name) return user.name;
+    return user?.email?.split("@")[0] || "";
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-   
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
 
@@ -27,99 +67,67 @@ export default function EditProfileScreen({ navigation }: { navigation?: any }) 
 
       <View style={styles.profileSection}>
         <View>
-          <Image
-            source={{
-              uri: "https://i.pravatar.cc/300",
-            }}
-            style={styles.profileImage}
-          />
+          {user?.profile_photo ? (
+            <Image source={{ uri: user.profile_photo }} style={styles.profileImage} />
+          ) : (
+            <View style={[styles.profileImage, styles.avatarPlaceholder]}>
+              <Text style={styles.avatarText}>{getInitials()}</Text>
+            </View>
+          )}
 
           <TouchableOpacity style={styles.editIcon}>
             <FontAwesome name="pencil" size={16} color="#00D9F5" />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.name}>Tiffany</Text>
-        <Text style={styles.emailText}>Tiffanyjearsey@gmail.com</Text>
+        <Text style={styles.name}>{getDisplayName()}</Text>
+        <Text style={styles.emailText}>{user?.email}</Text>
       </View>
 
       <View style={styles.form}>
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>First Name</Text>
+          <TextInput
+            placeholder="First Name"
+            placeholderTextColor="#aaa"
+            value={firstName}
+            onChangeText={setFirstName}
+            style={styles.input}
+          />
+        </View>
 
         <View style={styles.inputWrapper}>
-          <Text style={styles.label}>Full Name</Text>
-
+          <Text style={styles.label}>Last Name</Text>
           <TextInput
-            placeholder="Tiffany"
-            placeholderTextColor="#fff"
-            style={[styles.input, styles.errorInput]}
+            placeholder="Last Name"
+            placeholderTextColor="#aaa"
+            value={lastName}
+            onChangeText={setLastName}
+            style={styles.input}
           />
-
-          <Text style={styles.errorText}>* Name already exist</Text>
         </View>
 
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>Email</Text>
-
           <TextInput
-            placeholder="Tiffanyjearsey@gmail.com"
+            placeholder="Email"
             placeholderTextColor="#7C7C98"
+            value={email}
+            onChangeText={setEmail}
             style={styles.input}
-          />
-        </View>
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>Password</Text>
-
-          <View style={styles.passwordContainer}>
-            <TextInput
-              placeholder="••••••••••••"
-              placeholderTextColor="#7C7C98"
-              secureTextEntry
-              style={styles.passwordInput}
-            />
-
-            <Ionicons
-              name="eye-off-outline"
-              size={22}
-              color="#7C7C98"
-            />
-          </View>
-        </View>
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>Phone Number</Text>
-
-          <TextInput
-            placeholder="+1 82120142305"
-            placeholderTextColor="#7C7C98"
-            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
         </View>
       </View>
 
-
-      <TouchableOpacity style={styles.saveBtn}>
-        <Text style={styles.saveText}>Save Changes</Text>
+      <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={isLoading}>
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.saveText}>Save Changes</Text>
+        )}
       </TouchableOpacity>
-
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Ionicons name="home" size={26} color="#7C7C98" />
-        </TouchableOpacity>
-
-        <TouchableOpacity>
-          <Ionicons name="search" size={26} color="#7C7C98" />
-        </TouchableOpacity>
-
-        <TouchableOpacity>
-          <Ionicons name="download-outline" size={26} color="#7C7C98" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.activeTab}>
-          <Ionicons name="person" size={22} color="#00D9F5" />
-          <Text style={styles.activeText}>Profile</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -163,6 +171,14 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 55,
   },
+
+  avatarPlaceholder: {
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  avatarText: { color: "#fff", fontSize: 36, fontWeight: "bold" },
 
   editIcon: {
     position: "absolute",

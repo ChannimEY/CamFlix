@@ -9,7 +9,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { Movie, getPosterUrl } from "../services/movieService";
+import { Movie, getPosterUrl } from "../api/services/movieService";
 
 interface MoviePosterCardProps {
   movie: Movie;

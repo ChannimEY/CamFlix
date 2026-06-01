@@ -23,7 +23,8 @@ The app provides a smooth and responsive experience for browsing movies, searchi
 
 ### 🔐 Authentication
 - Welcome Screen
-- Login & Register
+- Login Screen
+- Register Screen
 - Forgot Password
 - Verify Code
 - Create New Password
@@ -46,6 +47,7 @@ The app provides a smooth and responsive experience for browsing movies, searchi
 - User Profile
 - Edit Profile
 - Settings Screen
+- Logout Screen
 
 ---
 
@@ -54,7 +56,7 @@ The app provides a smooth and responsive experience for browsing movies, searchi
 | Technology | Purpose |
 |------------|---------|
 | ⚛️ React Native | Mobile App Development |
-| 🚀 Expo | Development Platform |
+| 🚀 Expo | Development Platform & Build Tools |
 | 🧭 React Navigation | Navigation System |
 | 🎥 TMDB API | Movie Data |
 
@@ -66,18 +68,24 @@ The app provides a smooth and responsive experience for browsing movies, searchi
 CamFlix/
 │
 ├── src/
+│   ├── api/
+│   │   ├── models/
+│   │   └── services/
 │   ├── assets/
 │   ├── components/
-│   ├── hooks/
+│   ├── context/
 │   ├── navigation/
-│   ├── screens/
-│   │   ├── auth/
-│   │   ├── home/
-│   │   ├── profile/
-│   │   └── search/
-│   └── types/
+│   │   ├── stacks/
+│   │   └── tabs/
+│   └── screens/
+│       ├── auth/
+│       ├── home/
+│       ├── profile/
+│       └── search/
 │
 ├── App.tsx
+├── index.ts
+├── app.json
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -91,6 +99,7 @@ CamFlix/
 
 ```bash
 git clone https://github.com/ChannimEY/CamFlix.git
+cd CamFlix
 ```
 
 ### 2️⃣ Install Dependencies
@@ -99,32 +108,55 @@ git clone https://github.com/ChannimEY/CamFlix.git
 npm install
 ```
 
-### 3️⃣ Start Development Server
-
-```bash
-npx expo start
-```
-
----
-
 ## 🔑 Environment Variables
 
 Create a `.env` file in the root directory:
 
 ```env
+EXPO_PUBLIC_TMDB_API_KEY=your_tmdb_api_key_here
+```
+
+Or using the legacy format:
+
+```env
 TMDB_API_KEY=your_tmdb_api_key_here
 ```
+
+Get your API key from [TMDB](https://www.themoviedb.org/settings/api).
+
+### 4️⃣ Start Development Server
+
+```bash
+npm start
+```
+
+### 5️⃣ Run on Platform
+
+| Platform | Command |
+|----------|---------|
+| 📱 Android | `npm run android` |
+| 🍏 iOS | `npm run ios` |
+| 🌐 Web | `npm run web` |
 
 ---
 
 ## 📸 Screens
 
-- 🎬 Welcome Screen
-- 🔐 Authentication Screens
-- 🏠 Home Screen
-- 🔍 Search Screen
-- 👤 Profile Screen
-- 🎞️ Movie Detail Screen
+| Screen | Description |
+|--------|-------------|
+| 🎬 Welcome | App entry with sign up and social login options |
+| 🔐 Login | User authentication |
+| 📝 Register | Create new account |
+| 🔁 Forgot Password | Password recovery flow |
+| ✅ Verify Code | Email verification |
+| 🔐 New Password | Reset password screen |
+| 🏠 Home | Browse trending and popular movies |
+| 🔍 Search | Find movies by title |
+| 👤 Profile | User profile management |
+| ✏️ Edit Profile | Update user information |
+| ⚙️ Settings | App settings |
+| 🚪 Logout | Logout confirmation |
+| 🎞️ Movie Detail | Movie information, cast, and reviews |
 
 ---
 

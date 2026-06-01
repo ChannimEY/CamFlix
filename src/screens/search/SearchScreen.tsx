@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { searchMovies, Movie } from '../../services/movieService';
+import { searchMovies, Movie } from '../../api/services/movieService';
 import MovieCard from '../../components/MovieCard';
 
 const SearchScreen = ({ navigation }: { navigation?: any }) => {

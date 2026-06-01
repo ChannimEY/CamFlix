@@ -7,14 +7,15 @@ import {
   Image,
   Pressable,
 } from "react-native";
-
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 
 const WelcomeScreen = () => {
+  const navigation = useNavigation();
+
   return (
     <SafeAreaView style={styles.container}>
-   
       <View style={styles.logoContainer}>
         <Pressable>
           <Image
@@ -29,19 +30,20 @@ const WelcomeScreen = () => {
         </Text>
       </View>
 
- 
-      <TouchableOpacity style={styles.signUpButton}>
+      <TouchableOpacity
+        style={styles.signUpButton}
+        onPress={() => (navigation as any).navigate("Register")}
+      >
         <Text style={styles.signUpText}>Sign Up</Text>
       </TouchableOpacity>
 
       <View style={styles.loginContainer}>
         <Text style={styles.loginText}>
-          Already have an account?
+          Already have an account?{" "}
+          <Text style={styles.loginLink} onPress={() => (navigation as any).navigate("Login")}>
+            Login
+          </Text>
         </Text>
-
-        <TouchableOpacity>
-          <Text style={styles.loginButton}> Login</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.dividerContainer}>
@@ -55,15 +57,13 @@ const WelcomeScreen = () => {
       </View>
 
       <View style={styles.socialContainer}>
-   
         <TouchableOpacity style={styles.googleButton}>
-            <Image
+          <Image
             source={require("../../assets/google.png")}
             style={styles.logoGoogle}
           />
         </TouchableOpacity>
 
-      
         <TouchableOpacity style={styles.socialButton}>
           <Ionicons
             name="logo-apple"
@@ -72,7 +72,6 @@ const WelcomeScreen = () => {
           />
         </TouchableOpacity>
 
-    
         <TouchableOpacity style={styles.facebookButton}>
           <FontAwesome
             name="facebook"
@@ -99,7 +98,7 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     alignItems: "center",
-    marginTop: 70,
+    marginTop: 15,
   },
 
   logo: {
@@ -151,7 +150,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -40,
+    marginBottom: 20,
   },
 
   loginText: {
@@ -159,7 +158,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
 
-  loginButton: {
+  loginLink: {
     color: "#F2242A",
     fontSize: 17,
     fontWeight: "700",
@@ -205,12 +204,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  logoGoogle:{
+  logoGoogle: {
     width: 78,
     height: 78,
     resizeMode: "contain",
   },
-   googleButton: {
+  googleButton: {
     width: 80,
     height: 80,
     borderRadius: 40,

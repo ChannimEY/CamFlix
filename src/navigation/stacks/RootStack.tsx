@@ -1,28 +1,35 @@
+import React from "react";
+import { View, ActivityIndicator } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StaticParamList } from "@react-navigation/native";
+import { useAuth } from "../../context/AuthContext";
+import AuthStack from "./AuthStack";
+import BottomTab from "../tabs/BottomTab";
+import VerifyCodeScreen from "../../screens/auth/VerifyCodeScreen";
 
-import HomeStack from "./HomeStack";
-import { BottomTab } from "../tabs/BottomTab";
-import ProfileStack from "./ProfileStack";
-import SearchStack from "./SearchStack";
+const RootStackNav = createNativeStackNavigator();
 
-export const RootStack = createNativeStackNavigator({
-  screens: {
-    Tab: {
-      screen: BottomTab,
-      options: { headerShown: false },
-    },
-  },
-});
+export default function RootStack() {
+  const { token, isVerified, isLoading, authInitialRoute } = useAuth();
 
-type RootStackParamList = StaticParamList<typeof RootStack>;
-type HomeStackParamList = StaticParamList<typeof HomeStack>;
-type SearchStackParamList = StaticParamList<typeof SearchStack>;
-type ProfileStackParamList = StaticParamList<typeof ProfileStack>;
-
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList
-      extends RootStackParamList, HomeStackParamList, SearchStackParamList, ProfileStackParamList {}
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#121212", justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#F2242A" />
+      </View>
+    );
   }
+
+  if (!token) {
+    return <AuthStack initialRouteName={authInitialRoute} />;
+  }
+
+  if (!isVerified) {
+    return (
+      <RootStackNav.Navigator>
+        <RootStackNav.Screen name="VerifyCode" component={VerifyCodeScreen} options={{ headerShown: false }} />
+      </RootStackNav.Navigator>
+    );
+  }
+
+  return <BottomTab />;
 }

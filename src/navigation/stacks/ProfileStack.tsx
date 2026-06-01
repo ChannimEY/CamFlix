@@ -1,15 +1,15 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import React from "react";
 import ProfileScreen from "../../screens/profile/ProfileScreen";
 import EditProfileScreen from "../../screens/profile/EditProfileScreen";
-import LogoutScreen from "../../screens/profile/LogoutScreen";
 
+const Stack = createNativeStackNavigator();
 
-const ProfileStack = createNativeStackNavigator({
-  screens: {
-    Profile: ProfileScreen,
-    EditProfile: EditProfileScreen,
-    Logout: LogoutScreen,
-  },
-});
-
-export default ProfileStack;
+export default function ProfileStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+}

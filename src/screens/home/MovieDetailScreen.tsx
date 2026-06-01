@@ -18,21 +18,18 @@ import {
   getPosterUrl,
   Movie,
   MovieReview,
-} from "../../services/movieService";
+} from "../../api/services/movieService";
 import AboutTab from "./AboutTab";
 import CastTab from "./CastTab";
 import ReviewTab from "./ReviewTab";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 type DetailTab = "about" | "reviews" | "cast";
 
-const MovieDetailScreen = ({
-  navigation,
-  route,
-}: {
-  navigation?: any;
-  route?: { params?: { movieId?: number } };
-}) => {
-  const movieId = route?.params?.movieId;
+const MovieDetailScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const movieId = (route.params as any)?.movieId;
   const [movie, setMovie] = useState<Movie | null>(null);
   const [cast, setCast] = useState<CastMember[]>([]);
   const [reviews, setReviews] = useState<MovieReview[]>([]);
@@ -116,7 +113,7 @@ const MovieDetailScreen = ({
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation?.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={28} color="#fff" />
         </TouchableOpacity>
 

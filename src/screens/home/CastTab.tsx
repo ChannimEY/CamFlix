@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import {
   CastMember,
   getProfileUrl,
-} from "../../services/movieService";
+} from "../../api/services/movieService";
 
 interface CastTabProps {
   cast: CastMember[];
